@@ -2,16 +2,16 @@ from __future__ import unicode_literals
 __all__ = ['collect_events', 'format_week', 'prepare_email', 'header_web', 'footer_web']
 
 import re
-import cgi
 from datetime import datetime, timedelta
 from urllib import urlopen
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 
 _base_url = 'https://live-kipac.pantheonsite.io'
 _feed_url = _base_url + '/events/feed.xml'
 
 _tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
 
+xml_parser = ET.XMLParser(encoding='utf-8')
 
 def parse_event(item):
     out = {}
@@ -21,6 +21,8 @@ def parse_event(item):
         if not element.text:
             continue
         text = element.text.strip()
+        if not isinstance(text, unicode):
+            text = unicode(element.text, 'utf-8')
         if not text or text == '---':
             continue
 
@@ -41,7 +43,7 @@ def parse_event(item):
             sep = ': ' if ('series' in out and 'speaker' in out) else ''
             menu = ''
             if out.get('series') == 'KIPAC Tea Talk':
-                menu = ' (<a href="{0}">menu</a>)'.format(_tea_menu_url)
+                menu = ' [<a href="{0}">menu</a>]'.format(_tea_menu_url)
             if 'series' in out and 'url' in out:
                 out['series'] = '<a href="{1}">{0}</a>'.format(out['series'], out['url'])
             out['summary'] = out.get('series', '') + menu + sep + out.get('speaker', '')
@@ -53,22 +55,21 @@ def parse_event(item):
 
 
 def iter_events(feed_url):
-    root = ET.parse(urlopen(feed_url)).getroot()
-    items = root.getchildren()[::-1]
-    for item in items:
+    for item in reversed(ET.parse(urlopen(feed_url)).getroot()):
         event = parse_event(item)
-        if 'dtstart' in event and 'summary' in event:
+        if event.get('dtstart') and event.get('summary'):
             yield event
 
 
 def format_entry(entry):
     s = '<li>'
-    s += '<b>{0}</b><br>'.format(entry['summary'])
+    s += '<b>{0}</b> <br>'.format(entry['summary'])
     if entry['dtstart'].hour or entry['dtstart'].minute:
-        s += '{0} -- '.format(entry['dtstart'].strftime('%-I:%M %P'))
-    s += '{0}<br>'.format(entry.get('location', 'Location TBA'))
-    if 'description' in entry and entry['description'] != 'TBD':
-        s += '<i>{0}</i><br>'.format(entry['description'])
+        s += '{0}'.format(entry['dtstart'].strftime('%-I:%M %P'))
+    if entry.get('location'):
+        s += ' -- {0} <br>'.format(entry['location'])
+    if entry.get('description') and entry['description'] != 'TBD':
+        s += '<i>{0}</i> <br>'.format(entry['description'])
     s += '<br></li>'
     return entry['dtstart'].strftime('%A, %-m/%-d'), s
 

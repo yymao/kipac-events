@@ -1,0 +1,5 @@
+DirectoryIndex index.py
+<Files run.py>
+AuthType WebAuth
+Require user yymao
+</Files>

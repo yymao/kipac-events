@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import sys
 from events_utils import collect_events, prepare_email
 
