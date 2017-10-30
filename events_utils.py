@@ -1,65 +1,74 @@
+from __future__ import unicode_literals
 __all__ = ['collect_events', 'format_week', 'prepare_email', 'header_web', 'footer_web']
 
 import re
 import cgi
 from datetime import datetime, timedelta
 from urllib import urlopen
+import xml.etree.ElementTree as ET
 
-_ics_url = 'https://kipac-web.stanford.edu/events/{0.year}-{0.month:02d}/ical.ics'
+_base_url = 'https://live-kipac.pantheonsite.io'
+_feed_url = _base_url + '/events/feed.xml'
 
 _tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
 
 
-def unescape_ical(s):
-    return cgi.escape(re.sub(r'\\([\,;:])', r'\1', s).replace(r'\n','\n').replace('\xc2\xa0', ' '))
+def parse_event(item):
+    out = {}
+    for element in item:
+        tag = element.tag
 
-
-def extract_time(s):
-    return datetime.strptime(s, ('%Y%m%dT%H%M%S' if 'T' in s else '%Y%m%d'))
-
-
-def extract_description(s):
-    return s.partition('\n\nBody: \n\n')[2].partition('\n\nLocation: \n\n')[0].partition('\n\n\n\n')[0].strip()
-
-
-def iter_ics(ics_url):
-    lines = [l[:-2] for l in urlopen(ics_url)]
-    lines.append('')
-    d = None
-    line = lines.pop(0)
-    for l in lines:
-        if l.startswith(' '):
-            line += l[1:]
+        if not element.text:
             continue
-        if d is None:
-            if line == 'BEGIN:VEVENT':
-                d = {}
-        else:
-            if line == 'END:VEVENT':
-                if 'summary' in d and 'dtstart' in d:
-                    d['dtstart'] = extract_time(d['dtstart'])
-                    yield d
-                d = None
-            else:
-                k, __, v = line.partition(':')
-                k = k.partition(';')[0]
-                if k in ('DTSTART', 'SUMMARY', 'DESCRIPTION', 'LOCATION'):
-                    d[k.lower()] = v
-        line = l
+        text = element.text.strip()
+        if not text or text == '---':
+            continue
+
+        if tag == 'field_date_temp':
+            out['dtstart'] = datetime.strptime(text, '%Y-%m-%dT%H:%M:%S')
+        elif tag == 'field_event_series':
+            out['series'] = text
+        elif tag == 'field_event_speaker':
+            out['speaker'] = text
+        elif tag == 'title':
+            out['description'] = text
+        elif tag == 'field_stanford_event_location':
+            out['location'] = text.rpartition('<p>')[-1].partition('</p>')[0]
+        elif tag == 'path':
+            out['url'] = _base_url + text
+
+        if 'series' in out or 'speaker' in out:
+            sep = ': ' if ('series' in out and 'speaker' in out) else ''
+            menu = ''
+            if out.get('series') == 'KIPAC Tea Talk':
+                menu = ' (<a href="{0}">menu</a>)'.format(_tea_menu_url)
+            if 'series' in out and 'url' in out:
+                out['series'] = '<a href="{1}">{0}</a>'.format(out['series'], out['url'])
+            out['summary'] = out.get('series', '') + menu + sep + out.get('speaker', '')
+        elif 'description' in out:
+            out['summary'] = out['description']
+            del out['description']
+
+    return out
+
+
+def iter_events(feed_url):
+    root = ET.parse(urlopen(feed_url)).getroot()
+    items = root.getchildren()[::-1]
+    for item in items:
+        event = parse_event(item)
+        if 'dtstart' in event and 'summary' in event:
+            yield event
 
 
 def format_entry(entry):
     s = '<li>'
-    summary = re.sub(r'(kipac\s+tea(?:\s+talks?)?)', \
-            r'<a href="{0}">\1</a>'.format(_tea_menu_url),\
-            unescape_ical(entry['summary']), flags=re.I)
-    s += '<b>{0}</b><br>'.format(summary)
+    s += '<b>{0}</b><br>'.format(entry['summary'])
     if entry['dtstart'].hour or entry['dtstart'].minute:
         s += '{0} -- '.format(entry['dtstart'].strftime('%-I:%M %P'))
-    s += '{0}<br>'.format(unescape_ical(entry['location']) if 'location' in entry else 'Location TBA')
-    desc = extract_description(unescape_ical(entry['description'])) if 'description' in entry else ''
-    if desc:
-        s += '<i>{0}</i><br>'.format(desc.replace('\n', '<br>'))
+    s += '{0}<br>'.format(entry.get('location', 'Location TBA'))
+    if 'description' in entry and entry['description'] != 'TBD':
+        s += '<i>{0}</i><br>'.format(entry['description'])
     s += '<br></li>'
     return entry['dtstart'].strftime('%A, %-m/%-d'), s
 
@@ -90,8 +99,8 @@ def collect_events():
     entries = {}
     dates_this_week = []
     dates_next_week = []
-    
-    for entry in iter_ics(_ics_url.format(today)):
+
+    for entry in iter_events(_feed_url):
         if entry['dtstart'] < today:
             continue
         if entry['dtstart'] >= monday_after:
@@ -104,25 +113,23 @@ def collect_events():
             else:
                 dates_next_week.append(date)
         entries[date].append(s)
-    
+
     return entries, dates_this_week, dates_next_week
 
 
 _footer = '''<b>See also the <a href="https://physics.stanford.edu/applied-physicsphysics-colloquium-schedule">physics colloquium schedule</a> and the <a href="https://sitp.stanford.edu/seminar-schedule">SITP seminar schedule</a>.</b>
 <br><br><hr><p>
-This {0} is automatically generated with the information on the <a href="https://kipac-web.stanford.edu/events">KIPAC website</a>.{1}<br>
+This {{0}} is automatically generated with the information on the <a href="{0}/events">KIPAC website</a>.{{1}}<br>
 If you find the event information not accurate or missing, please contact <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a>.<br>
-If you find the content not properly displayed, please contact <a href="mailto:yymao@stanford.edu">Yao-Yuan Mao</a>.</p>'''
+If you find the content not properly displayed, please contact <a href="mailto:yymao.astro@gmail.com">Yao-Yuan Mao</a>.</p>'''.format(_base_url)
 
-
-_holidays = {datetime(2015, 12, 21), datetime(2015, 12, 28)}
 
 def prepare_email(entries, dates_next_week):
     today, today_weekday, coming_monday, monday_after = calc_dates()
 
-    if coming_monday in _holidays:
+    if coming_monday.month == 12 and coming_monday.day >= 22 or coming_monday.day <= 28:
         return '', '', ''
-    
+
     if today_weekday == 4: #Friday
         to = ['i-life@kipac.stanford.edu', 'Martha Siegel <martha@slac.stanford.edu>']
         preview = True
@@ -137,15 +144,15 @@ def prepare_email(entries, dates_next_week):
 
     subject = 'KIPAC Weekly Schedule {0}{1}'.format(week, \
             ' (preview)' if preview else '')
-    
+
     msg = ''
 
     if preview:
         msg += '''<p>This is a <em>preview</em> of the KIPAC weekly schedule for the coming week ({0}).<br>
-If you know events that are not listed or need updates, please ask <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a> to do so. 
+If you know events that are not listed or need updates, please ask <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a> to do so.
 Also, if a regular event will not take place, it's always good to say so <em>explictly</em> on the calender.</p><hr>
 '''.format(week)
-    
+
     msg += format_week(dates_next_week, entries)
 
     msg += _footer.format('message', ' <br>To view this email on a mobile-friendly webpage, <a href="https://web.stanford.edu/~yymao/cgi-bin/kipac-events">click here</a>.')
@@ -186,4 +193,3 @@ footer_web = _footer.format('page', '') + '''
 </body>
 </html>
 '''
-
