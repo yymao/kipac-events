@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from urllib import urlopen
 import xml.etree.cElementTree as ET
 
-_base_url = 'https://live-kipac.pantheonsite.io'
+_base_url = 'https://kipac.stanford.edu'
 _feed_url = _base_url + '/events/feed.xml'
 
 _tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
@@ -128,7 +128,7 @@ If you find the content not properly displayed, please contact <a href="mailto:y
 def prepare_email(entries, dates_next_week):
     today, today_weekday, coming_monday, monday_after = calc_dates()
 
-    if coming_monday.month == 12 and coming_monday.day >= 22 or coming_monday.day <= 28:
+    if coming_monday.month == 12 and (coming_monday.day >= 22 or coming_monday.day <= 28):
         return '', '', ''
 
     if today_weekday == 4: #Friday
