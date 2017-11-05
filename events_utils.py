@@ -128,7 +128,7 @@ If you find the content not properly displayed, please contact <a href="mailto:y
 def prepare_email(entries, dates_next_week):
     today, today_weekday, coming_monday, monday_after = calc_dates()
 
-    if coming_monday.month == 12 and (coming_monday.day >= 22 or coming_monday.day <= 28):
+    if coming_monday.month == 12 and coming_monday.day >= 22 and coming_monday.day <= 28:
         return '', '', ''
 
     if today_weekday == 4: #Friday
