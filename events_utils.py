@@ -7,7 +7,7 @@ from urllib import urlopen
 import xml.etree.cElementTree as ET
 
 _base_url = 'https://kipac.stanford.edu'
-_feed_url = _base_url + '/events/feed.xml'
+_feed_url = _base_url + '/events/feed.xml?_format=xml'
 
 _tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
 
@@ -55,7 +55,7 @@ def parse_event(item):
 
 
 def iter_events(feed_url):
-    for item in reversed(ET.parse(urlopen(feed_url)).getroot()):
+    for item in ET.parse(urlopen(feed_url)).getroot():
         event = parse_event(item)
         if event.get('dtstart') and event.get('summary'):
             yield event
