@@ -135,7 +135,7 @@ def prepare_email(entries, dates_next_week):
         to = ['i-life@kipac.stanford.edu', 'Martha Siegel <martha@slac.stanford.edu>']
         preview = True
     elif today_weekday == 6: #Sunday
-        to = 'everyone@kipac.stanford.edu'
+        to = ['everyone@kipac.stanford.edu', 'events@kipac.stanford.edu']
         preview = False
     else:
         return '', '', ''
