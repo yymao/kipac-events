@@ -8,8 +8,15 @@ sys.path.insert(0, '/afs/ir.stanford.edu/users/y/y/yymao/cgi-bin/kipac-teabot')
 if 'REQUEST_METHOD' in os.environ:
     print 'Content-Type: text/html'
     print
-    from email_server import email_server_dummy as email_server
-    #from email_server import email_server
+    import time
+    import cgi
+    import cgitb
+    cgitb.enable()
+    form = cgi.FieldStorage()
+    if form.getfirst("send") == time.strftime("%Y%m%d"):
+        from email_server import email_server
+    else:
+        from email_server import email_server_dummy as email_server
 else:
     from email_server import email_server
 
