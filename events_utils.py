@@ -12,6 +12,8 @@ _feed_url = _base_url + '/events/feed.xml?_format=xml'
 
 _tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
 
+_zoom_re = re.compile(r'https://(?:[\w-]+\.)?zoom\.us/j/\d{9,}(?:\?pwd=\w+)?', re.I)
+
 xml_parser = ET.XMLParser(encoding='utf-8')
 
 def parse_event(item):
@@ -52,6 +54,9 @@ def parse_event(item):
             out['summary'] = out['description']
             del out['description']
 
+        if out.get('summary'):
+            out['summary'] = _zoom_re.sub(r'<a href="\g<0>">\g<0></a>', out['summary'])
+
     return out
 
 
@@ -70,9 +75,10 @@ def format_entry(entry):
     if entry['dtstart'].hour or entry['dtstart'].minute:
         s += '{0}'.format(entry['dtstart'].strftime('%-I:%M %P'))
     if entry.get('location'):
-        s += ' -- {0} <br>'.format(entry['location'])
+        s += ' -- {0}'.format(entry['location'])
+    s += ' <br>'
     if entry.get('description') and entry['description'] != 'TBD':
-        s += '<i>{0}</i> <br>'.format(entry['description'])
+        s += '<i>{0}</i><br> '.format(entry['description'])
     s += '<br></li>'
     return entry['dtstart'].strftime('%A, %-m/%-d'), s
 
