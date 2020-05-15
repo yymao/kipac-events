@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 __all__ = ['collect_events', 'format_week', 'prepare_email', 'header_web', 'footer_web']
 
 import re
+import ssl
 from datetime import datetime, timedelta
 from urllib import urlopen
 import xml.etree.cElementTree as ET
@@ -55,7 +56,9 @@ def parse_event(item):
 
 
 def iter_events(feed_url):
-    for item in ET.parse(urlopen(feed_url)).getroot():
+    context = ssl._create_unverified_context()
+    content = urlopen(feed_url, context=context)
+    for item in ET.parse(content).getroot():
         event = parse_event(item)
         if event.get('dtstart') and event.get('summary'):
             yield event
