@@ -127,7 +127,7 @@ def collect_events():
     return entries, dates_this_week, dates_next_week
 
 
-_footer = '''<b>See also the <a href="https://physics.stanford.edu/applied-physicsphysics-colloquium-schedule">physics colloquium schedule</a> and the <a href="https://sitp.stanford.edu/seminar-schedule">SITP seminar schedule</a>.</b>
+_footer = '''<b>See also the <a href="https://physics.stanford.edu/applied-physicsphysics-colloquium-schedule">physics colloquium schedule</a> and the <a href="https://sitp.stanford.edu/events/upcoming-events">SITP seminar schedule</a>.</b>
 <br><br><hr><p>
 This {{0}} is automatically generated with the information on the <a href="{0}/events">KIPAC website</a>.{{1}}<br>
 If you find the event information not accurate or missing, please contact <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a>.<br>
