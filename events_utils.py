@@ -127,9 +127,9 @@ def collect_events():
     return entries, dates_this_week, dates_next_week
 
 
-_footer = '''<b>See also the schedules of <a href="https://physics.stanford.edu/news-events/applied-physicsphysics-colloquium">Physics/AP Colloquia</a>, <a href="https://sitp.stanford.edu/events/2021-22-sitp-seminars">SITP Seminars</a>, and <a href="https://theory.slac.stanford.edu/events">SLAC Theory Seminars</a>.</b>
-<br><br><hr><p>
-This {{0}} is automatically generated with the information on the <a href="{0}/events">KIPAC website</a>.{{1}}<br>
+_footer = '''<p><b>See also the schedules of <a href="https://physics.stanford.edu/news-events/applied-physicsphysics-colloquium">Physics/AP Colloquia</a>, <a href="https://sitp.stanford.edu/events/2021-22-sitp-seminars">SITP Seminars</a>, and <a href="https://theory.slac.stanford.edu/events">SLAC Theory Seminars</a>, 
+and the list of <a href="https://kipac.stanford.edu/people/visitors">current KIPAC visitors</a>.</b></p><hr>
+<p class="footer">This {{0}} is automatically generated with the information on the <a href="{0}/events">KIPAC website</a>.{{1}}<br>
 If you find the event information not accurate or missing, please contact <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a>.<br>
 If you find the content not properly displayed, please contact <a href="mailto:yymao.astro@gmail.com">Yao-Yuan Mao</a>.</p>'''.format(_base_url)
 
@@ -158,7 +158,7 @@ def prepare_email(entries, dates_next_week):
     msg = ''
 
     if preview:
-        msg += '''<p>This is a <em>preview</em> of the KIPAC weekly schedule for the coming week ({0}).<br>
+        msg += '''<p class="footer">This is a <em>preview</em> of the KIPAC weekly schedule for the coming week ({0}).<br>
 If you know events that are not listed or need updates, please ask <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a> to do so.
 Also, if a regular event will not take place, it's always good to say so <em>explictly</em> on the calender.</p><hr>
 '''.format(week)
@@ -171,22 +171,22 @@ Also, if a regular event will not take place, it's always good to say so <em>exp
 
 
 header_web = '''<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>KIPAC Events</title>
-  <meta http-equiv="content-type" content="text/html; charset=utf-8">
-  <meta name="robots" content="noindex, nofollow">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+  <meta name="robots" content="noindex, nofollow">
+  <title>KIPAC Events</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/modern-normalize/1.1.0/modern-normalize.css" integrity="sha512-Y0MM+V6ymRKN2zStTqzQ227DWhhp4Mzdo6gnlRnuaNCbc+YN/ZH0sBCLTM4M0oSy9c9VKiCvd4Jk44aCLrNS5Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
   .layout {
     margin-left: auto;
     margin-right: auto;
     max-width: 760px;
     padding: 0.5em 1em 5em 1em;
+    line-height: 1.35;
   }
-  p {
-    line-height: 1.5em;
+  .footer {
     font-size:small;
   }
   </style>
