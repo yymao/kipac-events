@@ -10,7 +10,7 @@ import xml.etree.cElementTree as ET
 _base_url = 'https://kipac.stanford.edu'
 _feed_url = _base_url + '/events/feed.xml?_format=xml'
 
-_tea_menu_url = 'https://docs.google.com/document/d/11u2iHGiyqSbNUSM37rFDIPmQ1X79hhagoNMjxRId6Ds/edit'
+_tea_menu_url = 'https://docs.google.com/presentation/d/1ONenqNLzxuV1xhcdZzdtnYBqvMqWQFz6gZKCfvI_il0/edit'
 
 _zoom_re = re.compile(r'https://(?:[\w-]+\.)?zoom\.us/j/\d{9,}(?:\?pwd=\w+)?', re.I)
 
