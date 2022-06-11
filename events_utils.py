@@ -165,7 +165,7 @@ Also, if a regular event will not take place, it's always good to say so <em>exp
 
     msg += format_week(dates_next_week, entries)
 
-    msg += _footer.format('message', ' <br>To view this email on a mobile-friendly webpage, <a href="https://web.stanford.edu/~yymao/cgi-bin/kipac-events">click here</a>.')
+    msg += _footer.format('message', ' <br>To view this email on a mobile-friendly webpage, <a href="https://web.stanford.edu/group/kipac_teabot/cgi-bin/events">click here</a>.')
 
     return to, subject, msg
 
