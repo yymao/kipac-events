@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import os
-import sys
 from events_utils import collect_events, prepare_email
-
-sys.path.insert(0, '/afs/ir.stanford.edu/users/y/y/yymao/cgi-bin/kipac-teabot')
 
 if 'REQUEST_METHOD' in os.environ:
     print 'Content-Type: text/html'
@@ -19,8 +16,6 @@ if 'REQUEST_METHOD' in os.environ:
         from email_server import email_server_dummy as email_server
 else:
     from email_server import email_server
-
-del sys.path[0]
 
 entries, _, dates_next_week = collect_events()
 to, subject, msg = prepare_email(entries, dates_next_week)
