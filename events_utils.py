@@ -3,8 +3,9 @@ __all__ = ['collect_events', 'format_week', 'prepare_email', 'header_web', 'foot
 
 import re
 import ssl
+import time
 from datetime import datetime, timedelta
-from urllib import urlopen
+from urllib2 import urlopen
 import xml.etree.cElementTree as ET
 
 _base_url = 'https://kipac.stanford.edu'
@@ -60,9 +61,17 @@ def parse_event(item):
     return out
 
 
-def iter_events(feed_url):
+def load_url(feed_url):
     context = ssl._create_unverified_context()
-    content = urlopen(feed_url, context=context)
+    for _ in range(5):
+        try:
+            return urlopen(feed_url, timeout=20, context=context)
+        except IOError:
+            time.sleep(5)
+
+
+def iter_events(feed_url):
+    content = load_url(feed_url)
     for item in ET.parse(content).getroot():
         event = parse_event(item)
         if event.get('dtstart') and event.get('summary'):
