@@ -99,7 +99,7 @@ def format_entry(entry):
 
 def format_week(dates, entries, header=None):
     s = '' if header is None else '<h2>{0}</h2>'.format(header)
-    if date=
+    if dates:
         for date in dates:
             entry = entries[date]
             if entry:
