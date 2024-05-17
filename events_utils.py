@@ -61,18 +61,23 @@ def parse_event(item):
     return out
 
 
-def load_url(feed_url):
+def load_url(url, check_prefix="<?xml"):
     context = ssl._create_unverified_context()
-    for _ in range(5):
+    for i in range(1, 11):
         try:
-            return urlopen(feed_url, timeout=20, context=context)
+            feed = urlopen(url, timeout=20, context=context).read()
         except IOError:
-            time.sleep(5)
+            pass
+        else:
+            if (check_prefix and feed.startswith(check_prefix)) or (feed and not check_prefix):
+                return feed
+        time.sleep(i * 2)
+    raise IOError("Not able to connect to " + url)
 
 
 def iter_events(feed_url):
     content = load_url(feed_url)
-    for item in ET.parse(content).getroot():
+    for item in ET.fromstring(content):
         event = parse_event(item)
         if event.get('dtstart') and event.get('summary'):
             yield event
@@ -94,7 +99,7 @@ def format_entry(entry):
 
 def format_week(dates, entries, header=None):
     s = '' if header is None else '<h2>{0}</h2>'.format(header)
-    if dates:
+    if date=
         for date in dates:
             entry = entries[date]
             if entry:
@@ -136,7 +141,7 @@ def collect_events():
     return entries, dates_this_week, dates_next_week
 
 
-_footer = '''<p><b>See also the schedules of <a href="https://physics.stanford.edu/news-events/applied-physicsphysics-colloquium">Physics/AP Colloquia</a>, <a href="https://sitp.stanford.edu/events/2021-22-sitp-seminars">SITP Seminars</a>, and <a href="https://theory.slac.stanford.edu/events">SLAC Theory Seminars</a>, 
+_footer = '''<p><b>See also the schedules of <a href="https://physics.stanford.edu/news-events/applied-physicsphysics-colloquium">Physics/AP Colloquia</a>, <a href="https://sitp.stanford.edu/events/2021-22-sitp-seminars">SITP Seminars</a>, and <a href="https://theory.slac.stanford.edu/events">SLAC Theory Seminars</a>,
 and the list of <a href="https://kipac.stanford.edu/people/visitors">current KIPAC visitors</a>.</b></p><hr>
 <p class="footer">This {{0}} is automatically generated with the information on the <a href="{0}/events">KIPAC website</a>.{{1}}<br>
 If you find the event information not accurate or missing, please contact <a href="mailto:martha@slac.stanford.edu">Martha Siegel</a>.<br>
