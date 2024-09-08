@@ -63,14 +63,15 @@ def parse_event(item):
 
 def load_url(url, check_prefix="<?xml"):
     context = ssl._create_unverified_context()
+    context.set_ciphers('HIGH:!DH:!aNULL')
     for i in range(1, 11):
         try:
             feed = urlopen(url, timeout=20, context=context).read()
         except IOError:
             pass
         else:
-            if isinstance(feed, unicode):
-                feed = feed.encode('ascii', 'xmlcharrefreplace')
+            if not isinstance(feed, unicode):
+                feed = feed.decode("utf-8", "ignore")
             if feed and feed.startswith(check_prefix or ""):
                 return feed
         time.sleep(i * 2)
