@@ -69,11 +69,10 @@ def load_url(url, check_prefix="<?xml"):
         except IOError:
             pass
         else:
-            try:
-                if (check_prefix and feed.startswith(check_prefix)) or (feed and not check_prefix):
-                    return feed
-            except UnicodeError:
-                pass
+            if isinstance(feed, unicode):
+                feed = feed.encode('ascii', 'xmlcharrefreplace')
+            if feed and feed.startswith(check_prefix or ""):
+                return feed
         time.sleep(i * 2)
     raise IOError("Not able to connect to " + url)
 
