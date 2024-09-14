@@ -4,6 +4,7 @@ __all__ = ['collect_events', 'format_week', 'prepare_email', 'header_web', 'foot
 import re
 import ssl
 import time
+import unicodedata
 from datetime import datetime, timedelta
 from urllib2 import urlopen
 import xml.etree.cElementTree as ET
@@ -72,6 +73,7 @@ def load_url(url, check_prefix="<?xml"):
         else:
             if not isinstance(feed, unicode):
                 feed = feed.decode("utf-8", "ignore")
+                feed = unicodedata.normalize("NFKD", feed)
             if feed and feed.startswith(check_prefix or ""):
                 return feed
         time.sleep(i * 2)
