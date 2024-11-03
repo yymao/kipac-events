@@ -16,19 +16,22 @@ _tea_menu_url = 'https://docs.google.com/presentation/d/1ONenqNLzxuV1xhcdZzdtnYB
 
 _zoom_re = re.compile(r'https://(?:[\w-]+\.)?zoom\.us/j/\d{9,}(?:\?pwd=\w+)?', re.I)
 
-xml_parser = ET.XMLParser(encoding='utf-8')
+
+def to_unicode(s):
+    if not s:
+        return ""
+    s = s.encode("utf-8", "xmlcharrefreplace").decode("utf-8", "xmlcharrefreplace").strip()
+    return unicodedata.normalize("NFKD", s)
+
 
 def parse_event(item):
     out = {}
     for element in item:
-        tag = element.tag
+        # element content is always in bytestring, decode to unicode first
+        tag = to_unicode(element.tag)
+        text = to_unicode(element.text)
 
-        if not element.text:
-            continue
-        text = element.text.strip()
-        if not isinstance(text, unicode):
-            text = unicode(element.text, 'utf-8')
-        if not text or text == '---':
+        if not (tag and text and text.strip("-")):
             continue
 
         if tag == 'field_date_temp':
@@ -67,22 +70,23 @@ def load_url(url, check_prefix="<?xml"):
     context.set_ciphers('HIGH:!DH:!aNULL')
     for i in range(1, 11):
         try:
+            # urlopen returns bytestring
             feed = urlopen(url, timeout=20, context=context).read()
         except IOError:
             pass
         else:
-            if not isinstance(feed, unicode):
-                feed = feed.decode("utf-8", "ignore")
-                feed = unicodedata.normalize("NFKD", feed)
-            if feed and feed.startswith(check_prefix or ""):
+            # `feed` is bytestring, so we need `str` below b/c we are using unicode_literals
+            if feed and feed.startswith(str(check_prefix or "")):
                 return feed
         time.sleep(i * 2)
     raise IOError("Not able to connect to " + url)
 
 
 def iter_events(feed_url):
-    content = load_url(feed_url)
-    for item in ET.fromstring(content):
+    xml_parser = ET.XMLParser(encoding='UTF-8')  # specifies xml encoding
+    xml_parser.feed(load_url(feed_url))  # xml_parser needs bytestring input, load_url returns bytestring
+    elements = xml_parser.close()
+    for item in elements:
         event = parse_event(item)
         if event.get('dtstart') and event.get('summary'):
             yield event
